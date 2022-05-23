@@ -52,7 +52,8 @@ export class Dialogs{
     const stateData = this.state.get(chatId);
     if(stateData && message.text){
       const handeled = await messageHandler.handler(message.text,stateData);
-      if(handeled === true){
+      const validated = handeled === true && await stateData.validate();
+      if(handeled === true && validated === true){
         if(stateData.isLast)
           return stateData.finish(stateData.context);
         else
@@ -60,6 +61,7 @@ export class Dialogs{
       }
       else {
         if(typeof handeled === 'string') await this.bot.sendMessage(chatId,handeled);
+        if(typeof validated === 'string') await this.bot.sendMessage(chatId,validated);
       }
       this.sendQuestion(chatId);
     }

@@ -26,6 +26,7 @@ export interface StateData {
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
+  validate: ()=>Promise<boolean|string>
 }
 
 export type Context = {
@@ -77,6 +78,16 @@ export class State{
       },
       setContext(name,value){
         stateItem.context[name] = value;
+      },
+      async validate(){
+        if(this.question.validate && typeof this.question.validate === 'function'){
+          const valid = await this.question.validate(this.context[this.question.name]);
+          if(valid !== true){
+            this.context[this.question.name] = undefined;
+            return valid;
+          }
+        }
+        return true;
       }
     };
   }

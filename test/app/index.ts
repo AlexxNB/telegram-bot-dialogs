@@ -9,7 +9,6 @@ dotenv.config({path: path.join(__dirname,".env")});
 if(!process.env.TELEGRAM_BOT_TOKEN)
   throw new Error("You must set TELEGRAM_BOT_TOKEN environment variable. See .env.example file.");
 
-
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN,{polling:true});
 const dialogs = new Dialogs(bot);
 
@@ -17,7 +16,10 @@ const testDialog = dialogs.create([
   {
     type: "text",
     message: "Test text question. Write any answer.",
-    name: 'text_test'
+    name: 'text_test',
+    validate: (msg => {
+      return msg === 'ok' ? true : 'Message should be "ok"';
+    })
   }
 ]);
 

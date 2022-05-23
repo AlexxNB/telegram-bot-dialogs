@@ -17,9 +17,12 @@ const testDialog = dialogs.create([
     type: "text",
     message: "Test text question. Write any answer.",
     name: 'text_test',
-    validate: (msg => {
+    validate: (msg) => {
       return msg === 'ok' ? true : 'Message should be "ok"';
-    })
+    },
+    format: (msg) => {
+      if(msg === 'ok') return true;
+    }
   }
 ]);
 

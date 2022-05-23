@@ -54,6 +54,7 @@ export class Dialogs{
       const handeled = await messageHandler.handler(message.text,stateData);
       const validated = handeled === true && await stateData.validate();
       if(handeled === true && validated === true){
+        await stateData.format();
         if(stateData.isLast)
           return stateData.finish(stateData.context);
         else

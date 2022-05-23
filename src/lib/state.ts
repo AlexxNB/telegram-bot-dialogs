@@ -26,12 +26,11 @@ export interface StateData {
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
-  validate: ()=>Promise<boolean|string>
+  validate: ()=>Promise<boolean|string>;
+  format: ()=>Promise<void>;
 }
 
-export type Context = {
-  [name:string]:any;
-};
+export type Context = Record<string, unknown>;
 
 export type OnFinishFn = (context:Context)=>void|Promise<void>;
 
@@ -81,13 +80,18 @@ export class State{
       },
       async validate(){
         if(this.question.validate && typeof this.question.validate === 'function'){
-          const valid = await this.question.validate(this.context[this.question.name]);
+          const valid = await this.question.validate(this.context[this.question.name] as string);
           if(valid !== true){
             this.context[this.question.name] = undefined;
             return valid;
           }
         }
         return true;
+      },
+      async format(){
+        if(this.question.format && typeof this.question.format === 'function'){
+          this.context[this.question.name] = await this.question.format(this.context[this.question.name] as string);
+        }
       }
     };
   }

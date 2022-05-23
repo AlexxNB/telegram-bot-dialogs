@@ -5,7 +5,7 @@ import textMessageHandler,{type QuestionText} from './questions/text';
 
 export type Question = QuestionText;
 
-export interface QuestionCommon {
+export interface QuestionCommon<T> {
   /** Type of question
   */
   type: string;
@@ -15,17 +15,17 @@ export interface QuestionCommon {
   message: string;
   /** Skip this question? */
   skip?: boolean;
-  /** Format answer before saving in result
+  /** Format user's answer
    * @param answer User's answer for the question
   */
-  format?: (answer:string)=>string;
+  format?: (answer:T)=>any;
   /** Validate answer
-   * @param answer User's answer for the question
+   * @param answer Handeled user's answer for the question
    * @returns true - to pass answer
    * @returns false - default error message and repeat question
    * @returns string - custom error message and repeat question
    */
-  validate?: (answer:string)=>boolean | string;
+  validate?: (answer:T)=>boolean | string;
 }
 
 interface Messsage {

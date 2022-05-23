@@ -1,7 +1,7 @@
 import type {QuestionCommon, MessageHandler} from './../questions';
 
 /** Simple text request */
-export interface QuestionText extends QuestionCommon{
+export interface QuestionText extends QuestionCommon<string>{
   type: "text"
 }
 

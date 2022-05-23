@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",                                
+    "module": "ESNext",                                
+    "rootDir": "./..",                                  
+    "moduleResolution": "Node",                                        
+    "esModuleInterop": true,    
+    
+    "forceConsistentCasingInFileNames": true,            
+    "strict": true,        
+    "skipLibCheck": false,  
+    "baseUrl": "./",
+    "paths":{
+      "telegram-bot-dialogs":["./../src/index.ts"]
+    }
+  },
+  "include": [
+    "./app/**/*",
+  ]
+}

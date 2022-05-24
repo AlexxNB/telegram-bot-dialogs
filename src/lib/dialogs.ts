@@ -1,4 +1,4 @@
-import {State} from './state';
+import {State, StateData} from './state';
 import type TelegramBot from 'node-telegram-bot-api';
 
 import messageHandler,{type Question} from './questions';
@@ -35,12 +35,11 @@ export class Dialogs{
           this.state.add(chatId,questions,
             // On finish function
             (result) => {
-              this.state.delete(chatId);
               resolve(result);
               if(callback && typeof callback === 'function') callback(result);
             }
           );
-          this.sendQuestion(chatId);
+          this.pickNextQuestion(chatId);
         });
       }
     };
@@ -55,10 +54,7 @@ export class Dialogs{
       const validated = handeled === true && await stateData.validate();
       if(handeled === true && validated === true){
         await stateData.format();
-        if(stateData.isLast)
-          return stateData.finish(stateData.context);
-        else
-          this.state.next(chatId);
+        return this.pickNextQuestion(chatId);
       }
       else {
         if(typeof handeled === 'string') await this.bot.sendMessage(chatId,handeled);
@@ -66,6 +62,17 @@ export class Dialogs{
       }
       this.sendQuestion(chatId);
     }
+  }
+
+  /** pick next question and send it */
+  private async pickNextQuestion(id:ChatId){
+    let stateData: StateData|null;
+    while( (stateData = this.state.next(id)) ){
+      if(!stateData.question.skip){
+        return this.sendQuestion(id);
+      }
+    }
+    this.state.finish(id);
   }
 
   /** Send current question to user */

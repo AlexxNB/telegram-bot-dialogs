@@ -19,8 +19,6 @@ interface Meta{
 export interface StateData {
   question: Question;
   context: Context;
-  isLast: boolean;
-  finish: OnFinishFn;
   meta?: Meta;
   buttons?: Buttons
   setMeta: (meta:Meta) => void;
@@ -42,7 +40,7 @@ export class State{
     if(this.has(id)) this.delete(id);
     this.state.set(id,{
       questions,
-      current: 0,
+      current: -1,
       context: {},
       finish: ctx => fn(ctx)
     });
@@ -61,13 +59,11 @@ export class State{
   /** Get current question */
   get(id:ChatId): StateData | null {
     const stateItem = this.state.get(id);
-    if(!stateItem) return null;
+    if(!stateItem || !stateItem.questions[stateItem.current]) return null;
 
     return {
       question: stateItem.questions[stateItem.current],
       context: stateItem.context,
-      finish: stateItem.finish,
-      isLast: this.isLast(id),
       meta: stateItem.meta,
       setButtons(buttons){
         stateItem.buttons = this.buttons = new Buttons(buttons);
@@ -99,15 +95,34 @@ export class State{
   /** Move to the next question*/
   next(id:ChatId): StateData | null {
     const stateItem = this.state.get(id);
-    if(!stateItem || this.isLast(id)) return null;
-    stateItem.current++;
-    return this.get(id);
+    if(stateItem){
+      stateItem.current++;
+      return this.get(id);
+    }
+    return null;
   }
 
-  /** Is current question last? */
-  private isLast(id:ChatId){
+  /** finish a session */
+  async finish(id:ChatId){
     const stateItem = this.state.get(id);
-    return !!stateItem && stateItem.current === stateItem.questions.length-1;
+    if(stateItem){
+      stateItem.finish(stateItem.context);
+      this.delete(id);
+    }
   }
 
+
+  /*next(id:ChatId): StateData | null {
+    let stateData: StateData|null;
+    const stateItem = this.state.get(id);
+
+    if(stateItem){
+      while( (stateData = this.get(id)) ){
+        if(stateData && !stateData.question.skip) return stateData;
+        stateItem.current++;
+      }
+    }
+
+    return null;
+  }*/
 }

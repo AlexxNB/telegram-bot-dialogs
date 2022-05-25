@@ -1,9 +1,15 @@
-import type {StateData} from './state';
+import type {StateData,Context} from './state';
 import type {ButtonsList} from './buttons';
 
 import textMessageHandler,{type QuestionText} from './questions/text';
+import numberMessageHandler,{type QuestionNumber} from './questions/number';
 
-export type Question = QuestionText;
+export type Question = QuestionText|QuestionNumber;
+/**
+ * Function which returns option value based on current context values
+ * @param context Current context values
+ */
+export type ContextFn<T> = (context:Context)=>T
 
 export interface QuestionCommon<T> {
   /** Type of question
@@ -12,20 +18,22 @@ export interface QuestionCommon<T> {
   /** Name for result in context */
   name: string;
   /** Question message */
-  message: string;
+  message: string | ContextFn<string>;
   /** Skip this question? */
-  skip?: boolean;
+  skip?: boolean | ContextFn<boolean>;
   /** Format user's answer
    * @param answer User's answer for the question
+   * @param context Object with collected data on previous steps
   */
-  format?: (answer:T)=>any;
+  format?: (answer:T, context?:Context)=>unknown;
   /** Validate answer
    * @param answer Handeled user's answer for the question
+   * @param context Object with collected data on previous steps
    * @returns true - to pass answer
    * @returns false - default error message and repeat question
    * @returns string - custom error message and repeat question
    */
-  validate?: (answer:T)=>boolean | string;
+  validate?: (answer:T, context?:Context)=>boolean | string;
 }
 
 interface Messsage {
@@ -60,8 +68,9 @@ export default {
 
 
 function getSenderHandler(data:StateData){
-  switch (data.question.type) {
+  switch (data.type) {
     case 'text': return textMessageHandler;
+    case 'number': return numberMessageHandler;
     default: return undefined;
   }
 }

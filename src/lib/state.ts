@@ -1,5 +1,5 @@
 import type {ChatId,Message} from "node-telegram-bot-api";
-import type {Question} from './questions';
+import type {Question, ContextFn} from './questions';
 import {Buttons,ButtonsList} from './buttons';
 
 interface StateItem {
@@ -16,11 +16,19 @@ interface Meta{
   chatId: ChatId;
 }
 
+type Options = Exclude<keyof Question,'type'|'name'|'format'|'validate'>
+type OptionReturn<T> = T extends ContextFn<infer R> ? R : T
+
 export interface StateData {
-  question: Question;
+  name: string;
+  type: string;
   context: Context;
   meta?: Meta;
   buttons?: Buttons
+  question: <
+    T extends Options,
+    U extends Question[T],
+  >(name: T)=>OptionReturn<U>;
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
@@ -59,12 +67,19 @@ export class State{
   /** Get current question */
   get(id:ChatId): StateData | null {
     const stateItem = this.state.get(id);
-    if(!stateItem || !stateItem.questions[stateItem.current]) return null;
+    const question = stateItem && stateItem.questions[stateItem.current];
+
+    if(!question) return null;
 
     return {
-      question: stateItem.questions[stateItem.current],
+      name: question['name'],
+      type: question['type'],
       context: stateItem.context,
       meta: stateItem.meta,
+      question(name){
+        const value = question[name] as ContextFn<unknown>|unknown;
+        return ( typeof value === 'function' ) ? value(clone(this.context, this.name)) : value;
+      },
       setButtons(buttons){
         stateItem.buttons = this.buttons = new Buttons(buttons);
       },
@@ -75,18 +90,18 @@ export class State{
         stateItem.context[name] = value;
       },
       async validate(){
-        if(this.question.validate && typeof this.question.validate === 'function'){
-          const valid = await this.question.validate(this.context[this.question.name] as string);
+        if(question.validate && typeof question.validate === 'function'){
+          const valid = await question.validate(this.context[this.name] as never, clone(this.context, this.name));
           if(valid !== true){
-            this.context[this.question.name] = undefined;
+            this.context[this.name] = undefined;
             return valid;
           }
         }
         return true;
       },
       async format(){
-        if(this.question.format && typeof this.question.format === 'function'){
-          this.context[this.question.name] = await this.question.format(this.context[this.question.name] as string);
+        if(question.format && typeof question.format === 'function'){
+          this.context[this.name] = await question.format(this.context[this.name] as never, clone(this.context, this.name));
         }
       }
     };
@@ -106,23 +121,19 @@ export class State{
   async finish(id:ChatId){
     const stateItem = this.state.get(id);
     if(stateItem){
-      stateItem.finish(stateItem.context);
+      stateItem.finish(clone(stateItem.context));
       this.delete(id);
     }
   }
+}
 
 
-  /*next(id:ChatId): StateData | null {
-    let stateData: StateData|null;
-    const stateItem = this.state.get(id);
+function clone<T>(obj:T, ...exclude:string[]):T{
+  const result = {} as T;
 
-    if(stateItem){
-      while( (stateData = this.get(id)) ){
-        if(stateData && !stateData.question.skip) return stateData;
-        stateItem.current++;
-      }
-    }
+  for(let key in obj){
+    if(!(key in exclude)) result[key] = obj[key];
+  }
 
-    return null;
-  }*/
+  return result;
 }

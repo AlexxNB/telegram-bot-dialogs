@@ -14,7 +14,7 @@ interface Dialog {
   start(chatId:TelegramBot.ChatId, callback?:OnFinishFn): Promise<Context>
 }
 
-
+/** Class to make dialogs in Telegram bots*/
 export class Dialogs{
   private bot: TelegramBot;
   private state = new State();
@@ -48,19 +48,24 @@ export class Dialogs{
   /** Subscribe on messages to bot */
   private async messageHandler(message: TelegramBot.Message){
     const chatId = message.chat.id;
-    const stateData = this.state.get(chatId);
-    if(stateData && message.text){
-      const handeled = await messageHandler.handler(message.text,stateData);
+    if(message.text) this.handleAnswer(chatId,message.text);
+  }
+
+  /** handle user's answer */
+  private async handleAnswer(id:ChatId,answer:string){
+    const stateData = this.state.get(id);
+    if(stateData){
+      const handeled = await messageHandler.handler(answer,stateData);
       const validated = handeled === true && await stateData.validate();
       if(handeled === true && validated === true){
         await stateData.format();
-        return this.pickNextQuestion(chatId);
+        return this.pickNextQuestion(id);
       }
       else {
-        if(typeof handeled === 'string') await this.bot.sendMessage(chatId,handeled);
-        if(typeof validated === 'string') await this.bot.sendMessage(chatId,validated);
+        if(typeof handeled === 'string') await this.bot.sendMessage(id,handeled);
+        if(typeof validated === 'string') await this.bot.sendMessage(id,validated);
       }
-      this.sendQuestion(chatId);
+      this.sendQuestion(id);
     }
   }
 
@@ -68,7 +73,7 @@ export class Dialogs{
   private async pickNextQuestion(id:ChatId){
     let stateData: StateData|null;
     while( (stateData = this.state.next(id)) ){
-      if(!stateData.question.skip){
+      if(!stateData.question('skip')){
         return this.sendQuestion(id);
       }
     }

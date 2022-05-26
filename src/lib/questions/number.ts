@@ -1,4 +1,4 @@
-import type {QuestionCommon, MessageHandler} from './../questions';
+import type {QuestionCommon, QuestionHandler} from './../questions';
 
 /** Simple text request */
 export interface QuestionNumber extends QuestionCommon<number>{
@@ -13,11 +13,13 @@ export default {
     };
   },
 
-  async handler(rawMessage,data){
-    const num = Number(rawMessage);
-    if(isNaN(num)) return 'You should enter only digits!';
-    data.setContext(data.name,num);
+  async validate(rawMessage){
+    if(isNaN(Number(rawMessage))) return 'Please, send only digits.';
     return true;
+  },
+
+  async format(rawMessage){
+    return Number(rawMessage);
   }
 
-} as MessageHandler;
+} as QuestionHandler<number>;

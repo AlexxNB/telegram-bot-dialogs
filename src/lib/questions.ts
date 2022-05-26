@@ -42,32 +42,24 @@ interface Messsage {
 }
 
 /** Methods to prepare message for user and handle the answer */
-export interface MessageHandler {
+export interface QuestionHandler<T> {
   /** Prepared question message
    * @param data Cureent state data
   */
   message(data:StateData): Promise<Messsage>;
-  /** Handle user's answer
+  /** Validate raw user's answer
    * @param rawMessage raw answer(message or button value) from user
    * @param data Cureent state data
   */
-  handler(rawMessage:string,data:StateData): Promise<boolean|string>;
+  validate(rawMessage:string,data:StateData): Promise<boolean|string>;
+  /** Format raw user's answer to value, whichh will be stored in result
+   * @param rawMessage raw answer(message or button value) from user
+   * @param data Cureent state data
+  */
+  format(rawMessage:string,data:StateData): Promise<T>;
 }
 
-export default {
-  async message(data){
-    const senderHandler = getSenderHandler(data);
-    return senderHandler && senderHandler.message(data);
-  },
-
-  async handler(rawMessage,data){
-    const senderHandler = getSenderHandler(data);
-    return senderHandler && senderHandler.handler(rawMessage,data);
-  }
-} as MessageHandler;
-
-
-function getSenderHandler(data:StateData){
+export function getQuestionHandler(data:StateData){
   switch (data.type) {
     case 'text': return textMessageHandler;
     case 'number': return numberMessageHandler;

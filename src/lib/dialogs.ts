@@ -1,7 +1,7 @@
 import {State, StateData} from './state';
 import type TelegramBot from 'node-telegram-bot-api';
 
-import messageHandler,{type Question} from './questions';
+import {getQuestionHandler, type Question} from './questions';
 import {ChatId} from 'node-telegram-bot-api';
 import {Context,OnFinishFn} from './state';
 
@@ -55,17 +55,28 @@ export class Dialogs{
   private async handleAnswer(id:ChatId,answer:string){
     const stateData = this.state.get(id);
     if(stateData){
-      const handeled = await messageHandler.handler(answer,stateData);
-      const validated = handeled === true && await stateData.validate();
-      if(handeled === true && validated === true){
-        await stateData.format();
-        return this.pickNextQuestion(id);
+      const messageHandler = getQuestionHandler(stateData);
+      if(messageHandler){
+
+        // Validate by handler
+        const rawValidated = await messageHandler.validate(answer,stateData);
+        if(rawValidated !== true) return this.resendQuestion(id,rawValidated);
+
+        // Format by handler
+        let value:unknown = await messageHandler.format(answer,stateData);
+
+        // Validate by user's function
+        const userValidated = await stateData.validate(value);
+        if(userValidated !== true) return this.resendQuestion(id,userValidated);
+
+        // Format by user's function
+        value = await stateData.format(value);
+
+        // Put result in context
+        stateData.setContext(stateData.name,value);
       }
-      else {
-        if(typeof handeled === 'string') await this.bot.sendMessage(id,handeled);
-        if(typeof validated === 'string') await this.bot.sendMessage(id,validated);
-      }
-      this.sendQuestion(id);
+
+      return this.pickNextQuestion(id);
     }
   }
 
@@ -80,10 +91,18 @@ export class Dialogs{
     this.state.finish(id);
   }
 
+  /** Resend question once again */
+  private async resendQuestion(id:ChatId, message:string|false){
+    if(typeof message === 'string') await this.bot.sendMessage(id,message);
+    this.sendQuestion(id);
+  }
+
   /** Send current question to user */
   private async sendQuestion(id:ChatId){
     const stateData = this.state.get(id);
-    if(stateData){
+    const messageHandler = stateData && getQuestionHandler(stateData);
+
+    if(messageHandler){
       const options:TelegramBot.SendMessageOptions = {};
       const question = await messageHandler.message(stateData);
 

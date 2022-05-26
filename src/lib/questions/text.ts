@@ -1,4 +1,4 @@
-import type {QuestionCommon, MessageHandler} from './../questions';
+import type {QuestionCommon, QuestionHandler} from './../questions';
 
 /** Simple text request */
 export interface QuestionText extends QuestionCommon<string>{
@@ -13,9 +13,12 @@ export default {
     };
   },
 
-  async handler(rawMessage,data){
-    data.setContext(data.name,rawMessage);
+  async validate(){
     return true;
+  },
+
+  async format(rawMessage){
+    return rawMessage;
   }
 
-} as MessageHandler;
+} as QuestionHandler<string>;

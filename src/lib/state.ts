@@ -32,8 +32,8 @@ export interface StateData {
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
-  validate: ()=>Promise<boolean|string>;
-  format: ()=>Promise<void>;
+  validate: (value:unknown)=>Promise<boolean|string>;
+  format: (value:unknown)=>Promise<unknown>;
 }
 
 export type Context = Record<string, unknown>;
@@ -78,7 +78,7 @@ export class State{
       meta: stateItem.meta,
       question(name){
         const value = question[name] as ContextFn<unknown>|unknown;
-        return ( typeof value === 'function' ) ? value(clone(this.context, this.name)) : value;
+        return ( typeof value === 'function' ) ? value(this.context) : value;
       },
       setButtons(buttons){
         stateItem.buttons = this.buttons = new Buttons(buttons);
@@ -89,20 +89,17 @@ export class State{
       setContext(name,value){
         stateItem.context[name] = value;
       },
-      async validate(){
+      async validate(value){
         if(question.validate && typeof question.validate === 'function'){
-          const valid = await question.validate(this.context[this.name] as never, clone(this.context, this.name));
-          if(valid !== true){
-            this.context[this.name] = undefined;
-            return valid;
-          }
+          return await question.validate(value as never, this.context);
         }
         return true;
       },
-      async format(){
+      async format(value){
         if(question.format && typeof question.format === 'function'){
-          this.context[this.name] = await question.format(this.context[this.name] as never, clone(this.context, this.name));
+          value = await question.format(value as never, this.context);
         }
+        return value;
       }
     };
   }
@@ -121,19 +118,8 @@ export class State{
   async finish(id:ChatId){
     const stateItem = this.state.get(id);
     if(stateItem){
-      stateItem.finish(clone(stateItem.context));
+      stateItem.finish(stateItem.context);
       this.delete(id);
     }
   }
-}
-
-
-function clone<T>(obj:T, ...exclude:string[]):T{
-  const result = {} as T;
-
-  for(let key in obj){
-    if(!(key in exclude)) result[key] = obj[key];
-  }
-
-  return result;
 }

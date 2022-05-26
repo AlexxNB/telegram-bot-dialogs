@@ -9,7 +9,7 @@ export type Question = QuestionText|QuestionNumber;
  * Function which returns option value based on current context values
  * @param context Current context values
  */
-export type ContextFn<T> = (context:Context)=>T
+export type ContextFn<T> = (context:Context)=>T|Promise<T>
 
 export interface QuestionCommon<T> {
   /** Type of question

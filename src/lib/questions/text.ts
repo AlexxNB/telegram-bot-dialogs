@@ -9,7 +9,7 @@ export default {
 
   async message(data){
     return {
-      message: data.question('message')
+      message: await data.question('message')
     };
   },
 

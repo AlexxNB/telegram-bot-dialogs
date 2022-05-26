@@ -28,7 +28,7 @@ export interface StateData {
   question: <
     T extends Options,
     U extends Question[T],
-  >(name: T)=>OptionReturn<U>;
+  >(name: T)=>Promise<OptionReturn<U>>;
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
@@ -76,9 +76,9 @@ export class State{
       type: question['type'],
       context: stateItem.context,
       meta: stateItem.meta,
-      question(name){
-        const value = question[name] as ContextFn<unknown>|unknown;
-        return ( typeof value === 'function' ) ? value(this.context) : value;
+      async question(name){
+        const value = question[name] as ContextFn<Promise<unknown>>|unknown;
+        return ( typeof value === 'function' ) ? await value(this.context) : value;
       },
       setButtons(buttons){
         stateItem.buttons = this.buttons = new Buttons(buttons);

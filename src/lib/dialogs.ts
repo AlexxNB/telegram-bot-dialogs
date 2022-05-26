@@ -84,7 +84,7 @@ export class Dialogs{
   private async pickNextQuestion(id:ChatId){
     let stateData: StateData|null;
     while( (stateData = this.state.next(id)) ){
-      if(!stateData.question('skip')){
+      if(!(await stateData.question('skip'))){
         return this.sendQuestion(id);
       }
     }

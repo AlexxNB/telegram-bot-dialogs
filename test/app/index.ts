@@ -14,21 +14,9 @@ const dialogs = new Dialogs(bot);
 
 const testDialog = dialogs.create([
   {
-    type: "text",
-    skip: true,
-    message: "This never should be shown",
-    name: 'skip_test'
-  },
-  {
-    type: "text",
-    message: "Test text question. Write any answer.",
-    name: 'text_test',
-    validate: (msg) => {
-      return msg === 'ok' ? true : 'Message should be "ok"';
-    },
-    format: (msg) => {
-      if(msg === 'ok') return true;
-    }
+    type: "confirm",
+    message: "Are you shure?",
+    name: 'confirm_test',
   }
 ]);
 

@@ -2,6 +2,7 @@ import {State, StateData} from './state';
 import type TelegramBot from 'node-telegram-bot-api';
 
 import {getQuestionHandler, type Question} from './questions';
+import {type ButtonId} from './buttons';
 import {ChatId} from 'node-telegram-bot-api';
 import {Context,OnFinishFn} from './state';
 
@@ -23,6 +24,7 @@ export class Dialogs{
     this.bot = bot;
 
     bot.on('message',msg => this.messageHandler(msg));
+    bot.on('callback_query',cb => this.callbackHandler(cb));
   }
 
   /** Create dialog
@@ -51,6 +53,13 @@ export class Dialogs{
     if(message.text) this.handleAnswer(chatId,message.text);
   }
 
+  /** Subscribe on callbacks */
+  private async callbackHandler(callback: TelegramBot.CallbackQuery){
+    const chatId = callback.message?.chat.id;
+    const messageId = callback.message?.message_id;
+    if(chatId && messageId && callback.data) this.handleCallback(chatId,messageId,callback.id,callback.data);
+  }
+
   /** handle user's answer */
   private async handleAnswer(id:ChatId,answer:string){
     const stateData = this.state.get(id);
@@ -59,8 +68,10 @@ export class Dialogs{
       if(messageHandler){
 
         // Validate by handler
-        const rawValidated = await messageHandler.validate(answer,stateData);
-        if(rawValidated !== true) return this.resendQuestion(id,rawValidated);
+        if(messageHandler.validate){
+          const rawValidated = await messageHandler.validate(answer,stateData);
+          if(rawValidated !== true) return this.resendQuestion(id,rawValidated);
+        }
 
         // Format by handler
         let value:unknown = await messageHandler.format(answer,stateData);
@@ -78,6 +89,55 @@ export class Dialogs{
 
       return this.pickNextQuestion(id);
     }
+  }
+
+  /** handle callback */
+  private async handleCallback(id:ChatId, msgId:number, cbId:string, data:string){
+    const stateData = this.state.get(id);
+    if(stateData && stateData.buttons){
+      const messageHandler = getQuestionHandler(stateData);
+      const button = stateData.buttons.get(data as ButtonId);
+      if(
+        messageHandler && messageHandler.callback && button
+        && stateData.meta
+        && stateData.meta.chatId === id
+        && stateData.meta.msgId === msgId
+      ){
+        const responce = await messageHandler.callback(button,stateData);
+
+        if(responce.message){
+          this.bot.answerCallbackQuery(cbId,{
+            text: responce.message,
+            show_alert:false
+          });
+        }
+
+        if(responce.alert){
+          this.bot.answerCallbackQuery(cbId,{
+            text: responce.alert,
+            show_alert:true
+          });
+        }
+
+        if(responce.answer && stateData.buttons) stateData.buttons.clear();
+
+        if(stateData.buttons.isChanged()){
+          await this.bot.editMessageReplyMarkup({
+            inline_keyboard: stateData.buttons.getInlineKeyboard()
+          },{
+            chat_id: stateData.meta.chatId,
+            message_id: stateData.meta.msgId
+          });
+        }
+
+        if(responce.answer) await this.bot.sendMessage(id,responce.answer,{parse_mode:'Markdown'});
+
+        if(responce.value){
+          this.handleAnswer(id,responce.value);
+        }
+      }
+    }
+    console.log(id,msgId,data);
   }
 
   /** pick next question and send it */

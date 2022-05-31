@@ -15,20 +15,18 @@ interface Meta{
   msgId: Message['message_id'];
   chatId: ChatId;
 }
-
-type Options = Exclude<keyof Question,'type'|'name'|'format'|'validate'>
-type OptionReturn<T> = T extends ContextFn<infer R> ? R : T
+type KeysOfUnion<T> = T extends T ? keyof T: never;
+type Options = Exclude<KeysOfUnion<Question>,'type'|'name'|'format'|'validate'>
+type OptionType<T extends Options,U> = U extends U ? T extends keyof U ? U[T] : never : never;
+type OptionReturn<T> = T extends ContextFn<infer R> ? R : T;
 
 export interface StateData {
-  name: string;
-  type: string;
+  name: Question['name'];
+  type: Question['type'];
   context: Context;
   meta?: Meta;
   buttons?: Buttons
-  question: <
-    T extends Options,
-    U extends Question[T],
-  >(name: T)=>Promise<OptionReturn<U>>;
+  question: <T extends Options>(name: T)=>Promise< OptionReturn< OptionType< T, Question > > >;
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
@@ -76,9 +74,12 @@ export class State{
       type: question['type'],
       context: stateItem.context,
       meta: stateItem.meta,
+      buttons: stateItem.buttons,
       async question(name){
-        const value = question[name] as ContextFn<Promise<unknown>>|unknown;
-        return ( typeof value === 'function' ) ? await value(this.context) : value;
+        if(name in question){
+          const value = question[name as keyof Question] as ContextFn<Promise<unknown>>|unknown;
+          return ( typeof value === 'function' ) ? await value(this.context) : value;
+        }
       },
       setButtons(buttons){
         stateItem.buttons = this.buttons = new Buttons(buttons);

@@ -1,40 +1,48 @@
 import type TelegramBot from 'node-telegram-bot-api';
-import {recursiveMap} from './utils';
+import {recursiveMap,hashObject} from './utils';
 
-type Button = {
-  [key:string]:string
-}
-| string
+export type Button = Record<string,string|undefined> | string
+export type ButtonsList = (Button|Button[])[];
+export type ButtonId = `$btn:${number}`;
 
-export type ButtonsList = (Button | Button[])[];
-
-type RawButton = {
+export type RawButton = {
+  id: ButtonId
   text: string;
   value: string;
 }
 
-type ButtonId = `$btn:${number}`;
-
 interface RawButtons {
-  structure: (ButtonId | ButtonId[])[],
-  buttons: {
-    [id:ButtonId]:RawButton
-  }
+  structure: (ButtonId|ButtonId[])[],
+  list: RawButton[]
 }
 
 export class Buttons {
   private buttons: RawButtons;
+  private hash = '';
 
   constructor(buttons:ButtonsList){
     this.buttons = makeRawButtons(buttons);
   }
 
   getInlineKeyboard(){
+    this.hash = hashObject(this.buttons);
     return makeInlineKeyboard(this.buttons);
   }
 
   get(btnId:ButtonId){
-    return this.buttons.buttons[btnId];
+    return this.buttons.list.find(b => b.id === btnId);
+  }
+
+  isChanged(){
+    return this.hash !== hashObject(this.buttons);
+  }
+
+  replace(buttons:ButtonsList){
+    this.buttons = makeRawButtons(buttons);
+  }
+
+  clear(){
+    this.replace([]);
   }
 }
 
@@ -43,12 +51,13 @@ function makeRawButtons(buttons:ButtonsList){
 
   const result:RawButtons = {
     structure:[],
-    buttons:{}
+    list:[]
   };
 
   const handler = function(button: Button){
     const btnId:ButtonId = `$btn:${id++}`;
     const rawButton:RawButton = {
+      id: btnId,
       text: 'Nameless',
       value: String(id)
     };
@@ -62,7 +71,7 @@ function makeRawButtons(buttons:ButtonsList){
         rawButton.text = butObj[1];
       }
     }
-    result.buttons[btnId] = rawButton;
+    result.list.push(rawButton);
     return btnId;
   };
 
@@ -74,9 +83,11 @@ function makeRawButtons(buttons:ButtonsList){
 
 function makeInlineKeyboard(rawButtons:RawButtons){
   return recursiveMap(rawButtons.structure, btnId => {
-    return {
-      text: rawButtons.buttons[btnId].text,
+    const button = rawButtons.list.find(b => b.id === btnId);
+    return button &&{
+      text: button.text,
       callback_data: btnId
     };
   }) as TelegramBot.InlineKeyboardButton[][];
 }
+

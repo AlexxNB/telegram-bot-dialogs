@@ -9,7 +9,7 @@ export function recursiveMap<T,U>(array:(U|U[])[],callback:(item:U)=>T):(T|T[])[
 }
 
 /** Make fast insecure hash of object */
-export function hashObject(obj:unknown){
+export function hashObject(...obj:unknown[]){
   const str = JSON.stringify(obj);
   let h =0;
   for(let i = 0; i < str.length; i++)

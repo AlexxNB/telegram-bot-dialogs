@@ -4,8 +4,9 @@ import type {ButtonsList,RawButton} from './buttons';
 import textMessageHandler,{type QuestionText} from './questions/text';
 import numberMessageHandler,{type QuestionNumber} from './questions/number';
 import confirmMessageHandler,{type QuestionConfirm} from './questions/confirm';
+import selectMessageHandler,{type QuestionSelect} from './questions/select';
 
-export type Question = QuestionText|QuestionNumber|QuestionConfirm;
+export type Question = QuestionText|QuestionNumber|QuestionConfirm|QuestionSelect;
 /**
  * Function which returns option value based on current context values
  * @param context Current context values
@@ -39,7 +40,7 @@ export interface QuestionCommon<T> {
 
 interface Message {
   message: string;
-  buttons: ButtonsList;
+  buttons?: ButtonsList;
 }
 
 interface CallbackResponce {
@@ -81,6 +82,7 @@ export function getQuestionHandler(data:StateData){
     case 'text': return textMessageHandler;
     case 'number': return numberMessageHandler;
     case 'confirm': return confirmMessageHandler;
+    case 'select': return selectMessageHandler;
     default: return undefined;
   }
 }

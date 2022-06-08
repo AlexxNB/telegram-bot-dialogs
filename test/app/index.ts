@@ -14,9 +14,14 @@ const dialogs = new Dialogs(bot);
 
 const testDialog = dialogs.create([
   {
-    type: "confirm",
-    message: "Are you shure?",
+    type: "select",
+    message: "Select your favourite fruits?",
     name: 'confirm_test',
+    buttons:[
+      ["Apple","Pear"],
+      ["Pinapple"]
+    ],
+    multiple: true
   }
 ]);
 

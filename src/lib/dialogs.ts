@@ -103,20 +103,20 @@ export class Dialogs{
         && stateData.meta.chatId === id
         && stateData.meta.msgId === msgId
       ){
-        const responce = await messageHandler.callback(button,stateData);
+        const responce = (await messageHandler.callback(button,stateData)) || {};
 
         if(responce.message){
           this.bot.answerCallbackQuery(cbId,{
             text: responce.message,
             show_alert:false
           });
-        }
-
-        if(responce.alert){
+        } else if(responce.alert){
           this.bot.answerCallbackQuery(cbId,{
             text: responce.alert,
             show_alert:true
           });
+        } else {
+          this.bot.answerCallbackQuery(cbId);
         }
 
         if(responce.answer && stateData.buttons) stateData.buttons.clear();
@@ -137,7 +137,6 @@ export class Dialogs{
         }
       }
     }
-    console.log(id,msgId,data);
   }
 
   /** pick next question and send it */

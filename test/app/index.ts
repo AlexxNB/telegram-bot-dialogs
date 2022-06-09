@@ -14,11 +14,14 @@ const dialogs = new Dialogs(bot);
 
 const testDialog = dialogs.create([
   {
-    type: "pinpad",
-    message: "Enter a number?",
-    name: 'pinpad_test',
-    mask:'**-**',
-    hide: true
+    type: "select",
+    message: "Choose fruits?",
+    name: 'select_test',
+    buttons:[
+      ["Apple","Orange"],
+      ["Cherry"]
+    ],
+    multiple: true
   }
 ]);
 

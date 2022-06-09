@@ -8,8 +8,6 @@ export interface QuestionSelect extends QuestionCommon<string[]>{
   buttons:ButtonsList;
   /** Allow select multiple buttons */
   multiple?: boolean | ContextFn<boolean>;
-  /** Label for Done button */
-  doneLabel?: string;
 }
 
 
@@ -26,7 +24,6 @@ export default {
 
   async callback(button,data){
     const multiple = (await data.question("multiple"));
-    const doneLabel = (await data.question("doneLabel")) || 'Done';
     if(multiple && data.buttons){
       if(button.value === 'complete'){
         const buttons = data.buttons.getMarked();
@@ -38,7 +35,7 @@ export default {
       } else {
         data.buttons.toggleMark(button.id);
         if(data.buttons.hasMarked()){
-          data.buttons.addFooter([{complete:doneLabel+"  ➡️"}]);
+          data.buttons.addFooter([{complete:'✅ Done'}]);
         } else {
           data.buttons.deleteFooter();
         }

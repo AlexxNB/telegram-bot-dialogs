@@ -132,7 +132,7 @@ function makeInlineKeyboard(rawButtons:RawButtons,marked:ButtonId[]){
     const button = rawButtons.list.find(b => b.id === btnId);
     if(button){
       const text = button.text;
-      const mark = marked.includes(button.id) ? '✅ ' : '';
+      const mark = marked.includes(button.id) ? '🔸 ' : '';
       return {
         text: `${mark}${text}`,
         callback_data: btnId

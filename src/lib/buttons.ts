@@ -103,25 +103,26 @@ function makeRawButtons(buttons:ButtonsList){
     const btnId:ButtonId = `$btn:${id++}`;
     const rawButton:RawButton = {
       id: btnId,
-      text: 'Nameless',
+      text: '',
       value: String(id)
     };
 
-    if(typeof button === 'string')
-      rawButton.text = rawButton.value = button;
-    else {
+    if(typeof button === 'string'){
+      rawButton.text = button;
+      if(button) rawButton.value = button;
+    } else {
       const butObj = Object.entries(button)[0] as [string,string];
       if(butObj){
         rawButton.value = butObj[0];
         rawButton.text = butObj[1];
       }
     }
+    if(rawButton.text === '') rawButton.text = ' ';
     result.list.push(rawButton);
     return btnId;
   };
 
   result.structure = recursiveMap(buttons,handler);
-
   return result;
 }
 

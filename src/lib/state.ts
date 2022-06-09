@@ -8,7 +8,8 @@ interface StateItem {
   context: Context;
   finish: OnFinishFn;
   meta?: Meta;
-  buttons?: Buttons
+  buttons?: Buttons;
+  store?:unknown;
 }
 
 interface Meta{
@@ -26,10 +27,12 @@ export interface StateData {
   context: Context;
   meta?: Meta;
   buttons?: Buttons
+  store?: unknown;
   question: <T extends Options>(name: T)=>Promise< OptionReturn< OptionType< T, Question > > >;
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
+  setStore: <T>(value:T) => void;
   validate: (value:unknown)=>Promise<boolean|string>;
   format: (value:unknown)=>Promise<unknown>;
 }
@@ -75,6 +78,7 @@ export class State{
       context: stateItem.context,
       meta: stateItem.meta,
       buttons: stateItem.buttons,
+      store: stateItem.store,
       async question(name){
         if(name in question){
           const value = question[name as keyof Question] as ContextFn<Promise<unknown>>|unknown;
@@ -89,6 +93,9 @@ export class State{
       },
       setContext(name,value){
         stateItem.context[name] = value;
+      },
+      setStore(value){
+        stateItem.store = this.store = value;
       },
       async validate(value){
         if(question.validate && typeof question.validate === 'function'){

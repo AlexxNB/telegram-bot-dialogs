@@ -19,7 +19,7 @@ const testDialog = dialogs.create([
     name: 'select_test',
     buttons:[
       ["Apple","Orange"],
-      ["Cherry"]
+      ["Cherry",{melon:"Melon"}]
     ],
     multiple: true
   }

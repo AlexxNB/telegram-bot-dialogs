@@ -10,7 +10,9 @@ if(!process.env.TELEGRAM_BOT_TOKEN)
   throw new Error("You must set TELEGRAM_BOT_TOKEN environment variable. See .env.example file.");
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN,{polling:true});
-const dialogs = new Dialogs(bot);
+const dialogs = new Dialogs(bot,{
+  locale: "ru"
+});
 
 const testDialog = dialogs.create([
   {

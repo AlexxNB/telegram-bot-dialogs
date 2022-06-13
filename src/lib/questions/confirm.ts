@@ -4,21 +4,21 @@ import type {QuestionCommon, QuestionHandler,ContextFn} from './../questions';
 export interface QuestionConfirm extends QuestionCommon<boolean>{
   type: "confirm";
   // Button label "Yes"
-  yes?: string | ContextFn<string>;
+  labelYes?: string | ContextFn<string>;
   // Button label "No"
-  no?: string | ContextFn<string>;
+  labelNo?: string | ContextFn<string>;
 }
 
 
 export default {
 
   async message(data){
-    const yes = (await data.question("yes")) || "Yes";
-    const no = (await data.question("no")) || "No";
+    const labelYes = (await data.question("labelYes")) || data.i18n("yes");
+    const labelNo = (await data.question("labelNo")) || data.i18n("no");
     return {
       message: await data.question('message'),
       buttons: [
-        [{yes},{no}]
+        [{yes:labelYes},{no:labelNo}]
       ]
     };
   },

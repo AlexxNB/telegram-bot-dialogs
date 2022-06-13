@@ -2,12 +2,11 @@ import type {StateData,Context} from './state';
 import type {ButtonsList,RawButton} from './buttons';
 
 import textMessageHandler,{type QuestionText} from './questions/text';
-import numberMessageHandler,{type QuestionNumber} from './questions/number';
 import confirmMessageHandler,{type QuestionConfirm} from './questions/confirm';
 import selectMessageHandler,{type QuestionSelect} from './questions/select';
 import pinpadMessageHandler,{type QuestionPinpad} from './questions/pinpad';
 
-export type Question = QuestionText|QuestionNumber|QuestionConfirm|QuestionSelect|QuestionPinpad;
+export type Question = QuestionText|QuestionConfirm|QuestionSelect|QuestionPinpad;
 /**
  * Function which returns option value based on current context values
  * @param context Current context values
@@ -81,7 +80,6 @@ export interface QuestionHandler<T> {
 export function getQuestionHandler(data:StateData){
   switch (data.type) {
     case 'text': return textMessageHandler;
-    case 'number': return numberMessageHandler;
     case 'confirm': return confirmMessageHandler;
     case 'select': return selectMessageHandler;
     case 'pinpad': return pinpadMessageHandler;

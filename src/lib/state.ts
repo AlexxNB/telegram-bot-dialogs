@@ -1,6 +1,8 @@
 import type {ChatId,Message} from "node-telegram-bot-api";
 import type {Question, ContextFn} from './questions';
 import {Buttons,ButtonsList} from './buttons';
+import type {Options} from './dialogs';
+import {I18n, type Label} from './i18n';
 
 interface StateItem {
   questions: Question[];
@@ -10,6 +12,7 @@ interface StateItem {
   meta?: Meta;
   buttons?: Buttons;
   store?:unknown;
+  i18n:I18n
 }
 
 interface Meta{
@@ -17,9 +20,9 @@ interface Meta{
   chatId: ChatId;
 }
 type KeysOfUnion<T> = T extends T ? keyof T: never;
-type Options = Exclude<KeysOfUnion<Question>,'type'|'name'|'format'|'validate'>
-type OptionType<T extends Options,U> = U extends U ? T extends keyof U ? U[T] : never : never;
-type OptionReturn<T> = T extends ContextFn<infer R> ? R : T;
+type Params = Exclude<KeysOfUnion<Question>,'type'|'name'|'format'|'validate'>
+type ParamType<T extends Params,U> = U extends U ? T extends keyof U ? U[T] : never : never;
+type ParamReturn<T> = T extends ContextFn<infer R> ? R : T;
 
 export interface StateData {
   name: Question['name'];
@@ -28,13 +31,14 @@ export interface StateData {
   meta?: Meta;
   buttons?: Buttons
   store?: unknown;
-  question: <T extends Options>(name: T)=>Promise< OptionReturn< OptionType< T, Question > > >;
+  question: <T extends Params>(name: T)=>Promise< ParamReturn< ParamType< T, Question > > >;
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
   setStore: <T>(value:T) => void;
   validate: (value:unknown)=>Promise<boolean|string>;
   format: (value:unknown)=>Promise<unknown>;
+  i18n: (label:Label)=>string;
 }
 
 export type Context = Record<string, unknown>;
@@ -45,13 +49,14 @@ export class State{
   private state: Map<ChatId,StateItem> = new Map();
 
   /** Add new item in state */
-  add(id:ChatId, questions:Question[], fn:OnFinishFn){
+  add(id:ChatId, questions:Question[], fn:OnFinishFn, options:Options){
     if(this.has(id)) this.delete(id);
     this.state.set(id,{
       questions,
       current: -1,
       context: {},
-      finish: ctx => fn(ctx)
+      finish: ctx => fn(ctx),
+      i18n: new I18n(options.locale)
     });
   }
 
@@ -108,6 +113,9 @@ export class State{
           value = await question.format(value as never, this.context);
         }
         return value;
+      },
+      i18n(label){
+        return stateItem.i18n.getString(label);
       }
     };
   }

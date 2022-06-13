@@ -5,6 +5,7 @@ import {getQuestionHandler, type Question} from './questions';
 import {type ButtonId} from './buttons';
 import {ChatId} from 'node-telegram-bot-api';
 import {Context,OnFinishFn} from './state';
+import {type Locale} from './i18n';
 
 interface Dialog {
   /** Start dialog session with user
@@ -15,13 +16,24 @@ interface Dialog {
   start(chatId:TelegramBot.ChatId, callback?:OnFinishFn): Promise<Context>
 }
 
+export interface Options {
+  /** Language of bot's messages */
+  locale?: Locale
+}
+
 /** Class to make dialogs in Telegram bots*/
 export class Dialogs{
   private bot: TelegramBot;
   private state = new State();
+  private options:Options;
 
-  constructor(bot:TelegramBot){
+  constructor(bot:TelegramBot,options?:Options){
     this.bot = bot;
+
+    this.options = {
+      locale: "en",
+      ...options
+    };
 
     bot.on('message',msg => this.messageHandler(msg));
     bot.on('callback_query',cb => this.callbackHandler(cb));
@@ -34,12 +46,15 @@ export class Dialogs{
     return {
       start: (chatId,callback) => {
         return new Promise((resolve) => {
-          this.state.add(chatId,questions,
+          this.state.add(
+            chatId,
+            questions,
             // On finish function
             (result) => {
               resolve(result);
               if(callback && typeof callback === 'function') callback(result);
-            }
+            },
+            this.options
           );
           this.pickNextQuestion(chatId);
         });

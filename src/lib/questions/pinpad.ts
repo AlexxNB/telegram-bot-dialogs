@@ -8,6 +8,8 @@ export interface QuestionPinpad extends QuestionCommon<number>{
   mask?: string|ContextFn<string>;
   /** Hide users input. Shows only X signs instead entered value. */
   hide?: boolean|ContextFn<boolean>;
+  /** Button label Done */
+  labelDone?: string|ContextFn<string>;
 }
 
 const digitRg = /^[0-9]$/;
@@ -18,16 +20,18 @@ export default {
     data.setStore('');
     const mask = await data.question("mask");
     const hide = await data.question("hide");
+    const labelDone = (await data.question("labelDone")) || data.i18n("done");
 
     return {
       message: await data.question('message'),
-      buttons: makePinpad('',mask,hide)
+      buttons: makePinpad('',labelDone,mask,hide)
     };
   },
 
   async callback(button,data){
     const mask = await data.question("mask");
     const hide = await data.question("hide");
+    const labelDone = (await data.question("labelDone")) || data.i18n("done");
 
     let value = data.store as string;
     const {isDonable,isFinished} = getConstrains(value,mask);
@@ -57,7 +61,7 @@ export default {
           data.setStore(value);
         }
 
-        data.buttons.replace(makePinpad(value,mask,hide));
+        data.buttons.replace(makePinpad(value,labelDone,mask,hide));
       }
     }
   },
@@ -69,7 +73,7 @@ export default {
 } as QuestionHandler<number>;
 
 
-function makePinpad(value:string, mask?:string, hide?:boolean):ButtonsList{
+function makePinpad(value:string, done:string, mask?:string, hide?:boolean):ButtonsList{
   const {isDonable} = getConstrains(value,mask);
 
   if(hide) value = hideNumbers(value);
@@ -83,7 +87,7 @@ function makePinpad(value:string, mask?:string, hide?:boolean):ButtonsList{
     [{backspace:"⬅️"},"0", {clear:"🆑"}]
   ];
 
-  if(isDonable) buttons.push([{done:"✅ Done"}]);
+  if(isDonable) buttons.push([{done:"✅ "+done}]);
 
   return buttons;
 }

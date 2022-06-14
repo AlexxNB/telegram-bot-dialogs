@@ -100,7 +100,7 @@ export class Dialogs{
         value = await stateData.format(value);
 
         // Put result in context
-        stateData.setContext(stateData.name,value);
+        stateData.setContext(stateData.question.name,value);
       }
 
       return this.pickNextQuestion(id);
@@ -159,7 +159,7 @@ export class Dialogs{
   private async pickNextQuestion(id:ChatId){
     let stateData: StateData|null;
     while( (stateData = this.state.next(id)) ){
-      if(!(await stateData.question('skip'))){
+      if(!(await stateData.question.param('skip'))){
         return this.sendQuestion(id);
       }
     }

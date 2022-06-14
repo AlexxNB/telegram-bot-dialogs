@@ -25,13 +25,15 @@ type ParamType<T extends Params,U> = U extends U ? T extends keyof U ? U[T] : ne
 type ParamReturn<T> = T extends ContextFn<infer R> ? R : T;
 
 export interface StateData {
-  name: Question['name'];
-  type: Question['type'];
+  question: {
+    name: Question['name'];
+    type: Question['type'];
+    param: <T extends Params>(name: T)=>Promise< ParamReturn< ParamType< T, Question > > >;
+  },
   context: Context;
   meta?: Meta;
   buttons?: Buttons
   store?: unknown;
-  question: <T extends Params>(name: T)=>Promise< ParamReturn< ParamType< T, Question > > >;
   setMeta: (meta:Meta) => void;
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
@@ -78,18 +80,20 @@ export class State{
     if(!question) return null;
 
     return {
-      name: question['name'],
-      type: question['type'],
+      question: {
+        name: question['name'],
+        type: question['type'],
+        async param(name){
+          if(name in question){
+            const value = question[name as keyof Question] as ContextFn<Promise<unknown>>|unknown;
+            return ( typeof value === 'function' ) ? await value(stateItem.context) : value;
+          }
+        },
+      },
       context: stateItem.context,
       meta: stateItem.meta,
       buttons: stateItem.buttons,
       store: stateItem.store,
-      async question(name){
-        if(name in question){
-          const value = question[name as keyof Question] as ContextFn<Promise<unknown>>|unknown;
-          return ( typeof value === 'function' ) ? await value(this.context) : value;
-        }
-      },
       setButtons(buttons){
         stateItem.buttons = this.buttons = new Buttons(buttons);
       },

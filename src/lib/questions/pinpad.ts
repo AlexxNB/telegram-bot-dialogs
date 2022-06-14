@@ -18,20 +18,20 @@ export default {
 
   async message(data){
     data.setStore('');
-    const mask = await data.question("mask");
-    const hide = await data.question("hide");
-    const labelDone = (await data.question("labelDone")) || data.i18n("done");
+    const mask = await data.question.param("mask");
+    const hide = await data.question.param("hide");
+    const labelDone = (await data.question.param("labelDone")) || data.i18n("done");
 
     return {
-      message: await data.question('message'),
+      message: await data.question.param('message'),
       buttons: makePinpad('',labelDone,mask,hide)
     };
   },
 
   async callback(button,data){
-    const mask = await data.question("mask");
-    const hide = await data.question("hide");
-    const labelDone = (await data.question("labelDone")) || data.i18n("done");
+    const mask = await data.question.param("mask");
+    const hide = await data.question.param("hide");
+    const labelDone = (await data.question.param("labelDone")) || data.i18n("done");
 
     let value = data.store as string;
     const {isDonable,isFinished} = getConstrains(value,mask);

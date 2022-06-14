@@ -18,21 +18,21 @@ export default {
 
   async message(data){
     data.setStore([]);
-    const buttons = (await data.question("buttons"));
+    const buttons = (await data.question.param("buttons"));
 
     return {
-      message: await data.question('message'),
+      message: await data.question.param('message'),
       buttons
     };
   },
 
   async callback(button,data){
-    const multiple = (await data.question("multiple"));
-    const labelDone = (await data.question("labelDone")) || data.i18n("done");
+    const multiple = (await data.question.param("multiple"));
+    const labelDone = (await data.question.param("labelDone")) || data.i18n("done");
 
     if(multiple && data.buttons){
       let marked = data.store as ButtonId[];
-      let buttons = (await data.question("buttons"));
+      let buttons = (await data.question.param("buttons"));
 
       if(button.value === 'done'){
         const markRg = /^🔸/;
@@ -62,7 +62,7 @@ export default {
   },
 
   async format(value,data){
-    const multiple = (await data.question("multiple"));
+    const multiple = (await data.question.param("multiple"));
     if(multiple){
       return value.split('\n');
     } else return value;

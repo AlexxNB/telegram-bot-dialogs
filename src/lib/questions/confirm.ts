@@ -13,10 +13,10 @@ export interface QuestionConfirm extends QuestionCommon<boolean>{
 export default {
 
   async message(data){
-    const labelYes = (await data.question("labelYes")) || data.i18n("yes");
-    const labelNo = (await data.question("labelNo")) || data.i18n("no");
+    const labelYes = (await data.question.param("labelYes")) || data.i18n("yes");
+    const labelNo = (await data.question.param("labelNo")) || data.i18n("no");
     return {
-      message: await data.question('message'),
+      message: await data.question.param('message'),
       buttons: [
         [{yes:labelYes},{no:labelNo}]
       ]

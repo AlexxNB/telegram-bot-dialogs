@@ -78,7 +78,7 @@ export interface QuestionHandler<T> {
 }
 
 export function getQuestionHandler(data:StateData){
-  switch (data.type) {
+  switch (data.question.type) {
     case 'text': return textMessageHandler;
     case 'confirm': return confirmMessageHandler;
     case 'select': return selectMessageHandler;

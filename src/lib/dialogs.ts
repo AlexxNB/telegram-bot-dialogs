@@ -5,7 +5,8 @@ import {getQuestionHandler, type Question} from './questions';
 import {type ButtonId} from './buttons';
 import {ChatId} from 'node-telegram-bot-api';
 import {Context,OnFinishFn} from './state';
-import {type Locale} from './i18n';
+import type {Locale} from './i18n';
+import type {LocalizationSet} from './../i18n/localizationSet';
 
 interface Dialog {
   /** Start dialog session with user
@@ -18,7 +19,7 @@ interface Dialog {
 
 export interface Options {
   /** Language of bot's messages */
-  locale?: Locale
+  locale?: Locale | LocalizationSet
 }
 
 /** Class to make dialogs in Telegram bots*/

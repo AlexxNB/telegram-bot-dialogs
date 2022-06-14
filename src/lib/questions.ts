@@ -1,5 +1,6 @@
 import type {StateData,Context} from './state';
 import type {ButtonsList,RawButton} from './buttons';
+import type {Options} from './dialogs';
 
 import textMessageHandler,{type QuestionText} from './questions/text';
 import confirmMessageHandler,{type QuestionConfirm} from './questions/confirm';
@@ -23,6 +24,8 @@ export interface QuestionCommon<T> {
   message: string | ContextFn<string>;
   /** Skip this question? */
   skip?: boolean | ContextFn<boolean>;
+  /** Overwrite global options */
+  options?:Options;
   /** Format user's answer
    * @param answer User's answer for the question
    * @param context Object with collected data on previous steps

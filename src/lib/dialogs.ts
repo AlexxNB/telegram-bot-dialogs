@@ -5,7 +5,7 @@ import {getQuestionHandler, type Question} from './questions';
 import {type ButtonId} from './buttons';
 import {ChatId} from 'node-telegram-bot-api';
 import {Context,OnFinishFn} from './state';
-import type {Locale} from './i18n';
+import {I18n, Locale} from './i18n';
 import type {LocalizationSet} from './../i18n/localizationSet';
 
 interface Dialog {
@@ -14,12 +14,14 @@ interface Dialog {
    * @param callback The callback which will be called when dialog session will be completed
    * @returns Promise which will be resolved as an object with named user's answers
   */
-  start(chatId:TelegramBot.ChatId, callback?:OnFinishFn): Promise<Context>
+  start(chatId:TelegramBot.ChatId, callback?:OnFinishFn,options?:Options): Promise<Context>
 }
 
 export interface Options {
   /** Language of bot's messages */
-  locale?: Locale | LocalizationSet
+  locale?: Locale;
+  /** Redefining strings of current locale */
+  strings?: LocalizationSet
 }
 
 /** Class to make dialogs in Telegram bots*/
@@ -27,6 +29,7 @@ export class Dialogs{
   private bot: TelegramBot;
   private state = new State();
   private options:Options;
+  private i18n:I18n;
 
   constructor(bot:TelegramBot,options?:Options){
     this.bot = bot;
@@ -36,6 +39,8 @@ export class Dialogs{
       ...options
     };
 
+    this.i18n = new I18n(this.options.locale,this.options.strings);
+
     bot.on('message',msg => this.messageHandler(msg));
     bot.on('callback_query',cb => this.callbackHandler(cb));
   }
@@ -43,9 +48,10 @@ export class Dialogs{
   /** Create dialog
    * @param questions A list of questions
    */
-  create(questions:Question[]):Dialog{
+  create(questions:Question[],options?:Options):Dialog{
+    const dialogI18n = this.i18n.makeNested(options && options.locale, options && options.strings);
     return {
-      start: (chatId,callback) => {
+      start: (chatId,callback,options) => {
         return new Promise((resolve) => {
           this.state.add(
             chatId,
@@ -55,7 +61,7 @@ export class Dialogs{
               resolve(result);
               if(callback && typeof callback === 'function') callback(result);
             },
-            this.options
+            dialogI18n.makeNested(options && options.locale, options && options.strings)
           );
           this.pickNextQuestion(chatId);
         });

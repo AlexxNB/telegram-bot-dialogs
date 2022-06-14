@@ -9,8 +9,6 @@ export interface QuestionSelect extends QuestionCommon<string[]>{
   buttons: ButtonsList | ContextFn<ButtonsList>;
   /** Allow select multiple buttons */
   multiple?: boolean | ContextFn<boolean>;
-  /** Button label Done */
-  labelDone?: string|ContextFn<string>;
 }
 
 
@@ -28,7 +26,6 @@ export default {
 
   async callback(button,data){
     const multiple = (await data.question.param("multiple"));
-    const labelDone = (await data.question.param("labelDone")) || data.i18n("done");
 
     if(multiple && data.buttons){
       let marked = data.store as ButtonId[];
@@ -51,7 +48,7 @@ export default {
         data.setStore(marked);
 
         buttons = makeMarkedButtons(buttons,marked);
-        if(marked.length > 0) buttons.push([{done:"✅ "+labelDone}]);
+        if(marked.length > 0) buttons.push([{done:"✅ "+data.i18n("done")}]);
 
         data.buttons.replace(buttons);
       }

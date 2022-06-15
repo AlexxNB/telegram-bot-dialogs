@@ -6,8 +6,9 @@ import textMessageHandler,{type QuestionText} from './questions/text';
 import confirmMessageHandler,{type QuestionConfirm} from './questions/confirm';
 import selectMessageHandler,{type QuestionSelect} from './questions/select';
 import pinpadMessageHandler,{type QuestionPinpad} from './questions/pinpad';
+import pickerMessageHandler,{type QuestionPicker} from './questions/picker';
 
-export type Question = QuestionText|QuestionConfirm|QuestionSelect|QuestionPinpad;
+export type Question = QuestionText|QuestionConfirm|QuestionSelect|QuestionPinpad|QuestionPicker;
 /**
  * Function which returns option value based on current context values
  * @param context Current context values
@@ -86,6 +87,7 @@ export function getQuestionHandler(data:StateData){
     case 'confirm': return confirmMessageHandler;
     case 'select': return selectMessageHandler;
     case 'pinpad': return pinpadMessageHandler;
+    case 'picker': return pickerMessageHandler;
     default: return undefined;
   }
 }

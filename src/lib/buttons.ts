@@ -53,6 +53,28 @@ export class Buttons {
   }
 }
 
+export function makeRawButton(button:Button,id?:number){
+  const btnId:ButtonId = `$btn:${id||0}`;
+  const rawButton:RawButton = {
+    id: btnId,
+    text: '',
+    value: String(id)
+  };
+
+  if(typeof button === 'string'){
+    rawButton.text = button;
+    if(button) rawButton.value = button;
+  } else {
+    const butObj = Object.entries(button)[0] as [string,string];
+    if(butObj){
+      rawButton.value = butObj[0];
+      rawButton.text = butObj[1];
+    }
+  }
+  if(rawButton.text === '') rawButton.text = ' ';
+  return rawButton;
+}
+
 function makeRawButtons(buttons:ButtonsList){
   let id = 0;
 
@@ -62,26 +84,9 @@ function makeRawButtons(buttons:ButtonsList){
   };
 
   const handler = function(button: Button){
-    const btnId:ButtonId = `$btn:${id++}`;
-    const rawButton:RawButton = {
-      id: btnId,
-      text: '',
-      value: String(id)
-    };
-
-    if(typeof button === 'string'){
-      rawButton.text = button;
-      if(button) rawButton.value = button;
-    } else {
-      const butObj = Object.entries(button)[0] as [string,string];
-      if(butObj){
-        rawButton.value = butObj[0];
-        rawButton.text = butObj[1];
-      }
-    }
-    if(rawButton.text === '') rawButton.text = ' ';
+    const rawButton = makeRawButton(button,id++);
     result.list.push(rawButton);
-    return btnId;
+    return rawButton.id;
   };
 
   result.structure = recursiveMap(buttons,handler);
@@ -99,3 +104,4 @@ function makeInlineKeyboard(rawButtons:RawButtons){
     }
   }) as TelegramBot.InlineKeyboardButton[][];
 }
+

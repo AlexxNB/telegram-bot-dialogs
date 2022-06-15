@@ -16,9 +16,16 @@ const dialogs = new Dialogs(bot,{
 
 const testDialog = dialogs.create([
   {
-    type: "pinpad",
-    message: "Enter number?",
+    type: "picker",
+    message: "Choose a fruit?",
     name: 'select_test',
+    list: [
+      "Banana",
+      "Orange",
+      "Cherry",
+      "Kiwi",
+    ],
+    loop: true
   }
 ]);
 

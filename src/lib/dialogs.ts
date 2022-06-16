@@ -5,8 +5,8 @@ import {getQuestionHandler, type Question} from './questions';
 import {type ButtonId} from './buttons';
 import {ChatId} from 'node-telegram-bot-api';
 import {Context,OnFinishFn} from './state';
-import {I18n, Locale} from './i18n';
-import type {LocalizationSet} from './../i18n/localizationSet';
+import {I18n} from './i18n';
+import {Config,type Options} from './config';
 
 interface Dialog {
   /** Start dialog session with user
@@ -17,29 +17,18 @@ interface Dialog {
   start(chatId:TelegramBot.ChatId, callback?:OnFinishFn,options?:Options): Promise<Context>
 }
 
-export interface Options {
-  /** Language of bot's messages */
-  locale?: Locale;
-  /** Redefining strings of current locale */
-  strings?: LocalizationSet
-}
-
 /** Class to make dialogs in Telegram bots*/
 export class Dialogs{
   private bot: TelegramBot;
   private state = new State();
-  private options:Options;
+  private config:Config;
   private i18n:I18n;
 
   constructor(bot:TelegramBot,options?:Options){
     this.bot = bot;
+    this.config = new Config(options);
 
-    this.options = {
-      locale: "en",
-      ...options
-    };
-
-    this.i18n = new I18n(this.options.locale,this.options.strings);
+    this.i18n = new I18n(this.config.get('locale'),this.config.get('strings'));
 
     bot.on('message',msg => this.messageHandler(msg));
     bot.on('callback_query',cb => this.callbackHandler(cb));
@@ -49,7 +38,7 @@ export class Dialogs{
    * @param questions A list of questions
    */
   create(questions:Question[],options?:Options):Dialog{
-    const dialogI18n = this.i18n.makeNested(options && options.locale, options && options.strings);
+    const dialogConfig = this.config.makeNested(options);
     return {
       start: (chatId,callback,options) => {
         return new Promise((resolve) => {
@@ -61,7 +50,7 @@ export class Dialogs{
               resolve(result);
               if(callback && typeof callback === 'function') callback(result);
             },
-            dialogI18n.makeNested(options && options.locale, options && options.strings)
+            dialogConfig.makeNested(options)
           );
           this.pickNextQuestion(chatId);
         });

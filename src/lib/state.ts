@@ -1,6 +1,7 @@
 import type {ChatId,Message} from "node-telegram-bot-api";
 import type {Question, ContextFn} from './questions';
 import {Buttons,ButtonsList} from './buttons';
+import {Config} from './config';
 import {I18n, type I18nFn} from './i18n';
 
 interface StateItem {
@@ -11,7 +12,7 @@ interface StateItem {
   meta?: Meta;
   buttons?: Buttons;
   store?:unknown;
-  i18n:I18n
+  options:Config
 }
 
 interface Meta{
@@ -41,6 +42,7 @@ export interface StateData {
   validate: (value:unknown)=>Promise<boolean|string>;
   format: (value:unknown)=>Promise<unknown>;
   i18n: I18nFn;
+  options:Config;
 }
 
 export type Context = Record<string, unknown>;
@@ -51,14 +53,14 @@ export class State{
   private state: Map<ChatId,StateItem> = new Map();
 
   /** Add new item in state */
-  add(id:ChatId, questions:Question[], fn:OnFinishFn, i18n:I18n){
+  add(id:ChatId, questions:Question[], fn:OnFinishFn, options:Config){
     if(this.has(id)) this.delete(id);
     this.state.set(id,{
       questions,
       current: -1,
       context: {},
       finish: ctx => fn(ctx),
-      i18n
+      options
     });
   }
 
@@ -79,10 +81,8 @@ export class State{
 
     if(!question) return null;
 
-    const questionI18n = (question.options) ? stateItem.i18n.makeNested(
-      question.options && question.options.locale,
-      question.options && question.options.strings
-    ) : stateItem.i18n;
+    const options = stateItem && stateItem.options.makeNested(question.options);
+    const questionI18n = new I18n(options.get("locale"),options.get("strings"));
 
     return {
       question: {
@@ -99,6 +99,7 @@ export class State{
       meta: stateItem.meta,
       buttons: stateItem.buttons,
       store: stateItem.store,
+      options: stateItem.options,
       setButtons(buttons){
         stateItem.buttons = this.buttons = new Buttons(buttons);
       },

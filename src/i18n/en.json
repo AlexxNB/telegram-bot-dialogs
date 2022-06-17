@@ -1,5 +1,7 @@
 {
   "done":"Done",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "msg_break": "Dialogue ended.",
+  "msg_timeout": "No response for a long time. Dialogue ended."
 }

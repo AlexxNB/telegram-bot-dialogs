@@ -12,7 +12,8 @@ interface StateItem {
   meta?: Meta;
   buttons?: Buttons;
   store?:unknown;
-  options:Config
+  options:Config;
+  timer:null|[ReturnType<typeof setTimeout>,(()=>void)|undefined];
 }
 
 interface Meta{
@@ -39,10 +40,14 @@ export interface StateData {
   setButtons: (buttons:ButtonsList) => void;
   setContext: <T>(name:string, value:T) => void;
   setStore: <T>(value:T) => void;
+  startTimeout: (fn?:()=>void)=>void;
+  restartTimeout: (fn?:()=>void)=>void;
+  stopTimeout: ()=>void;
   validate: (value:unknown)=>Promise<boolean|string>;
   format: (value:unknown)=>Promise<unknown>;
   i18n: I18nFn;
   options:Config;
+  destroy:()=>void;
 }
 
 export type Context = Record<string, unknown>;
@@ -60,7 +65,8 @@ export class State{
       current: -1,
       context: {},
       finish: ctx => fn(ctx),
-      options
+      options,
+      timer: null
     });
   }
 
@@ -112,6 +118,31 @@ export class State{
       setStore(value){
         stateItem.store = this.store = value;
       },
+      startTimeout(fn){
+        const timeout = this.options.get("timeout");
+        if(timeout) {
+          stateItem.timer = [
+            setTimeout(() => {
+              this.destroy();
+              fn && fn();
+            },timeout*1000),
+            fn
+          ];
+        }
+      },
+      restartTimeout(){
+        if(stateItem.timer){
+          const fn = stateItem.timer[1];
+          this.stopTimeout();
+          this.startTimeout(fn);
+        }
+      },
+      stopTimeout(){
+        if(stateItem.timer){
+          clearTimeout(stateItem.timer[0]);
+          stateItem.timer = null;
+        }
+      },
       async validate(value){
         if(question.validate && typeof question.validate === 'function'){
           return await question.validate(value as never, this.context);
@@ -126,6 +157,9 @@ export class State{
       },
       i18n(label){
         return questionI18n.getString(label);
+      },
+      destroy: () => {
+        this.delete(id);
       }
     };
   }

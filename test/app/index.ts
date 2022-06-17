@@ -11,10 +11,7 @@ if(!process.env.TELEGRAM_BOT_TOKEN)
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN,{polling:true});
 const dialogs = new Dialogs(bot,{
-  locale: "ru",
-  strings:{
-    done: "Май"
-  }
+  locale: "ru"
 });
 
 const testDialog = dialogs.create([

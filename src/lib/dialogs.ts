@@ -5,7 +5,6 @@ import {getQuestionHandler, type Question} from './questions';
 import {type ButtonId} from './buttons';
 import {ChatId} from 'node-telegram-bot-api';
 import {Context,OnFinishFn} from './state';
-import {I18n} from './i18n';
 import {Config,type Options} from './config';
 
 interface Dialog {
@@ -14,7 +13,12 @@ interface Dialog {
    * @param callback The callback which will be called when dialog session will be completed
    * @returns Promise which will be resolved as an object with named user's answers
   */
-  start(chatId:TelegramBot.ChatId, callback?:OnFinishFn,options?:Options): Promise<Context>
+  start(chatId:TelegramBot.ChatId, callback?:OnFinishFn,options?:Options): Promise<Context>,
+  /** Break dialog session for user
+   * @param chatId ID of chat of connected user
+   * @param message Optional message which will be shown in a chat
+   */
+  break(chatId:TelegramBot.ChatId,message?:string): Promise<void>
 }
 
 /** Class to make dialogs in Telegram bots*/
@@ -22,13 +26,10 @@ export class Dialogs{
   private bot: TelegramBot;
   private state = new State();
   private config:Config;
-  private i18n:I18n;
 
   constructor(bot:TelegramBot,options?:Options){
     this.bot = bot;
     this.config = new Config(options);
-
-    this.i18n = new I18n(this.config.get('locale'),this.config.get('strings'));
 
     bot.on('message',msg => this.messageHandler(msg));
     bot.on('callback_query',cb => this.callbackHandler(cb));
@@ -54,6 +55,13 @@ export class Dialogs{
           );
           this.pickNextQuestion(chatId);
         });
+      },
+      break: async(chatId,message) => {
+        const stateData = this.state.get(chatId);
+        if(stateData){
+          stateData.destroy();
+          await this.bot.sendMessage(chatId,'⚠️ ' + (message || stateData.i18n("msg_break")));
+        }
       }
     };
   }
@@ -77,6 +85,8 @@ export class Dialogs{
     if(stateData){
       const messageHandler = getQuestionHandler(stateData);
       if(messageHandler){
+        // Disable dialog interruption by timeout
+        stateData.stopTimeout();
 
         // Validate by handler
         if(messageHandler.validate){
@@ -115,7 +125,7 @@ export class Dialogs{
         && stateData.meta.msgId === msgId
       ){
         const responce = (await messageHandler.callback(button,stateData)) || {};
-
+        stateData.restartTimeout();
         if(responce.message){
           this.bot.answerCallbackQuery(cbId,{
             text: responce.message,
@@ -184,6 +194,19 @@ export class Dialogs{
       }
 
       const sentMessage = await this.bot.sendMessage(id,question.message,options);
+
+      stateData.startTimeout(async() => {
+        if(stateData.buttons && stateData.meta){
+          await this.bot.editMessageReplyMarkup({
+            inline_keyboard: []
+          },{
+            chat_id: stateData.meta.chatId,
+            message_id: stateData.meta.msgId
+          });
+        }
+        await this.bot.sendMessage(id,'⚠️ ' + stateData.i18n("msg_timeout"));
+      });
+
       stateData.setMeta({
         msgId: sentMessage.message_id,
         chatId: sentMessage.chat.id,

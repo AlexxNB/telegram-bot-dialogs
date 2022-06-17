@@ -3,5 +3,26 @@
   "yes": "Yes",
   "no": "No",
   "msg_break": "Dialogue ended.",
-  "msg_timeout": "No response for a long time. Dialogue ended."
+  "msg_timeout": "No response for a long time. Dialogue ended.",
+  "monthes": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ],
+  "day":"Day",
+  "month": "Month",
+  "year": "Year",
+  "pick_day":"Pick a day",
+  "pick_month": "Pick a month",
+  "pick_year": "Pick a year",
+  "wrong_date": "Wrong date"
 }

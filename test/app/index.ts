@@ -16,16 +16,9 @@ const dialogs = new Dialogs(bot,{
 
 const testDialog = dialogs.create([
   {
-    type: "picker",
-    message: "Choose a fruit?",
+    type: "datepicker",
+    message: "Choose a date?",
     name: 'select_test',
-    list: [
-      "Banana",
-      "Orange",
-      "Cherry",
-      "Kiwi",
-    ],
-    loop: true
   }
 ]);
 

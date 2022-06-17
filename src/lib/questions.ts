@@ -1,14 +1,15 @@
 import type {StateData,Context} from './state';
 import type {ButtonsList,RawButton} from './buttons';
-import type {Options} from './dialogs';
+import type {Options} from './config';
 
 import textMessageHandler,{type QuestionText} from './questions/text';
 import confirmMessageHandler,{type QuestionConfirm} from './questions/confirm';
 import selectMessageHandler,{type QuestionSelect} from './questions/select';
 import pinpadMessageHandler,{type QuestionPinpad} from './questions/pinpad';
 import pickerMessageHandler,{type QuestionPicker} from './questions/picker';
+import datepickerMessageHandler,{type QuestionDatepicker} from './questions/datepicker';
 
-export type Question = QuestionText|QuestionConfirm|QuestionSelect|QuestionPinpad|QuestionPicker;
+export type Question = QuestionText|QuestionConfirm|QuestionSelect|QuestionPinpad|QuestionPicker|QuestionDatepicker;
 /**
  * Function which returns option value based on current context values
  * @param context Current context values
@@ -66,7 +67,7 @@ export interface QuestionHandler<T> {
    * @param rawMessage callback_data from user
    * @param data Current state data
   */
-  callback?(button:RawButton,data:StateData): Promise<CallbackResponce>;
+  callback?(button:RawButton,data:StateData): Promise<CallbackResponce|void>;
 
   /** Validate raw user's answer
    * @param rawMessage raw answer(message or keyboard button value) from user
@@ -88,6 +89,7 @@ export function getQuestionHandler(data:StateData){
     case 'select': return selectMessageHandler;
     case 'pinpad': return pinpadMessageHandler;
     case 'picker': return pickerMessageHandler;
+    case 'datepicker': return datepickerMessageHandler;
     default: return undefined;
   }
 }

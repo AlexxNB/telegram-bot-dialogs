@@ -44,7 +44,15 @@ export default {
 
     if(button.value === 'done'){
       if(validDate(data)) return {
-        value: new Date(store.date.y as number,store.date.m as number,store.date.d as number,0,(new Date()).getTimezoneOffset()*-1,0,0),
+        value: new Date(
+          store.date.y as number,
+          store.date.m as number,
+          store.date.d as number,
+          0,
+          (new Date()).getTimezoneOffset()*-1,
+          0,
+          0
+        ),
         answer: `✅ ${store.date.d} ${data.i18n("monthes")[store.date.m as number]} ${store.date.y}`
       };
     } else {

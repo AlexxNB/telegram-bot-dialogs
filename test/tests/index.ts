@@ -6,7 +6,8 @@ import {Dialogs} from 'telegram-bot-dialogs';
 import type {Context,uvu} from 'uvu';
 import type {ChatId} from 'node-telegram-bot-api';
 
-const token = 'no_need_token_there';
+const token = 'no_need_token_here';
+let chatId = 1;
 
 export type TestContext = Ctx & uvu.Crumbs;
 
@@ -30,9 +31,6 @@ test.before( async ctx => {
   testCtx.server = new TelegramServer({port:9000});
   await testCtx.server.start();
 
-  //Initiate client
-  testCtx.client = new TelegramClient(testCtx.server.config.apiURL);
-
   // Starting bot
   testCtx.bot = new TelegramBot(token,{polling:true, baseApiUrl: testCtx.server.config.apiURL});
 
@@ -47,12 +45,23 @@ test.before( async ctx => {
   };
 });
 
+test.before.each(async ctx => {
+  const {server} = ctx as TestContext;
+  //Initiate client
+  ctx.client = new TelegramClient(server.config.apiURL,{
+    chatId: chatId,
+    userId: chatId++,
+  });
+});
+
 test.after( async ctx => {
-  const {bot,server} = ctx as TestContext;
-  // Stop the bot
-  await bot.stopPolling();
+  const {server} = ctx as TestContext;
+
   // Stop server
   await server.stop();
+
+  // Stop the bot
+  await ctx.bot.stopPolling();
 
   // Fix: stopPolling don't kill connection
   setTimeout(() => {

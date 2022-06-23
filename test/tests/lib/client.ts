@@ -62,7 +62,7 @@ export class TelegramClient{
       firstName: 'Test Name',
       userName: 'TestName',
       chatTitle: 'Test Name',
-      token: 'no_need_token_there',
+      token: 'no_need_token_here',
       interval: 50,
       timeout: 1000,
       ...options

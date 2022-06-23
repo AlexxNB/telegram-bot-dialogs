@@ -16,9 +16,11 @@ const dialogs = new Dialogs(bot,{
 
 const testDialog = dialogs.create([
   {
-    type: "datepicker",
-    message: "Choose a date?",
-    name: 'select_test',
+    type:"select",
+    message:"Test select question.",
+    name: 'test_1',
+    buttons: [[{a:"A"},{b:"B"},{c:"C"}]],
+    multiple: false
   }
 ]);
 

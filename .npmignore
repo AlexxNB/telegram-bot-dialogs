@@ -1,0 +1,8 @@
+.github
+docs
+node_modules
+src
+test
+.eslintrc
+esbuild.js
+tsconfig.json

@@ -9,8 +9,7 @@ export type Locale =
 
 export type Label = keyof LocalizationSet;
 
-export type I18nFn = (label:Label)=>string;
-
+export type I18nFn = <T extends Label>(label:T)=>Required<LocalizationSet>[T];
 
 type Localizations = {
   [locale in Locale]:LocalizationSet
@@ -30,8 +29,9 @@ export class I18n {
   }
 
   /** Get string in current locale */
-  getString(label:Label){
-    return this.localeStrings[label] || this.fallbackStrings[label] || (label as string);
+  getString<T extends Label>(label:T):Required<LocalizationSet>[T]{
+    const str = this.localeStrings[label] || this.fallbackStrings[label] || (label as string);
+    return str as Required<LocalizationSet>[T];
   }
 
   /** Make nested I18n instance */
